@@ -24,7 +24,7 @@ A React Native (RN) Playground lets users write RN code snippets or mini-project
 
 ## 2) High‑Level Architecture (Cloud + Client)
 
-```mermaid
+
 flowchart TD
   subgraph Client Side
     A[Web UI (Playground Editor)]
