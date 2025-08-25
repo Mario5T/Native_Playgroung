@@ -8,48 +8,39 @@ This document explains the high-level architecture of a **React Native Playgroun
 
 ```mermaid
 flowchart TD
-  subgraph Client_Side
-    A[Web UI (Playground Editor)]
-    B[Preview Targets]
-    B1[Web Preview (React DOM)]
-    B2[Android Device/Emulator]
-    B3[iOS Device/Simulator]
-  end
+subgraph "Client Side"
+  A[Web UI (Playground Editor)]
+  B[Preview Targets]
+  B1[Web Preview (React DOM)]
+  B2[Android Device/Emulator]
+  B3[iOS Device/Simulator]
+end
 
-  subgraph Backend_Services
-    S1[API Gateway / BFF]
-    S2[Auth Service]
-    S3[Project Service\nCRUD + Metadata]
-    S4[Storage\n(S3/GCS/Blob)]
-    S5[Build Service\nMetro/Babel/tsc]
-    S6[Bundler/Metro\nHermes bytecode]
-    S7[Live Reload / WS Broker]
-    S8[Sandbox Executor\n(containerized)]
-    S9[CDN / Edge Cache]
-    S10[Logs & Metrics\n(ELK/CloudWatch/Grafana)]
-  end
+subgraph "Backend Services"
+  S1[API Gateway / BFF]
+  S2[Auth Service]
+  S3[Project Service - CRUD + Metadata]
+  S4[Storage (S3/GCS/Blob)]
+  S5[Build Service (Metro/Babel/tsc)]
+  S6[Bundler/Metro/Hermes bytecode]
+  S7[Live Reload / WS Broker]
+  S8[Sandbox Executor (containerized)]
+  S9[CDN / Edge Cache]
+  S10[Logs & Metrics (ELK/CloudWatch/Grafana)]
+end
 
-  subgraph Integrations
-    I1[VCS Import\n(GitHub/GitLab)]
-    I2[Expo Services / OTA Updates]
-    I3[Feature Flags]
-  end
+subgraph "Integrations"
+  I1[VCS Import (GitHub/GitLab)]
+  I2[Expo Services / OTA Updates]
+  I3[Feature Flags]
+end
 
-  A <--> S1
-  S1 --> S2
-  S1 --> S3
-  S3 --> S4
-  A -->|save/open| S3
-  A -->|code change| S7
-  S7 --> B
-  S5 --> S6
-  S6 --> S9
-  S9 --> B
-  S8 -.->|run/evaluate| B2
-  S8 -.->|run/evaluate| B3
-  A -->|import| I1
-  S1 --> I2
-  S1 --> I3
+A <--> S1
+B --> S2
+S1 --> S3
+S3 --> S4
+A --> I1
+
 ```
 
 ---
