@@ -20,7 +20,7 @@ This document explains the architecture and shows how different parts of the sys
 
 ```mermaid
 flowchart TD
-  subgraph Client_Side [Client Side]
+  subgraph Client_Side
     A[Web UI (Playground Editor)]
     B[Preview Targets]
     B1[Web Preview (React DOM)]
@@ -28,7 +28,7 @@ flowchart TD
     B3[iOS Device/Simulator]
   end
 
-  subgraph Backend_Services [Backend Services]
+  subgraph Backend_Services
     S1[API Gateway / BFF]
     S2[Auth Service]
     S3[Project Service\nCRUD + Metadata]
@@ -62,6 +62,7 @@ flowchart TD
   A -->|import| I1
   S1 --> I2
   S1 --> I3
+
 ```
 
 ---
