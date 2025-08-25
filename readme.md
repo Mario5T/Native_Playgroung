@@ -1,18 +1,6 @@
-# React Native Playground — Architecture Diagram & Explainer
+# React Native Playground – Architecture & Documentation
 
-## Overview
-
-A **React Native Playground** is an environment where developers can write, preview, and test React Native code instantly, without needing a full local setup. Think of it like a CodeSandbox or Expo Snack, but tailored for React Native.
-
-The playground typically supports:
-
-* **Code editing** (in-browser or in-app editor)
-* **Instant preview** (on device, emulator, or web preview)
-* **Dependency management** (importing npm libraries)
-* **Bundling & live reload**
-* **Cloud sync & sharing**
-
-This document explains the architecture and shows how different parts of the system interact.
+This document explains the high-level architecture of a **React Native Playground** (similar to Expo Snack or CodeSandbox for RN). It includes diagrams (in Mermaid syntax, GitHub-compatible), component breakdowns, flows, and key considerations.
 
 ---
 
@@ -62,108 +50,114 @@ flowchart TD
   A -->|import| I1
   S1 --> I2
   S1 --> I3
-
 ```
 
 ---
 
-## 2. Developer Workflow (Sequence)
+## 2. Flow – Editing & Running Code
 
 ```mermaid
 sequenceDiagram
-  participant U as User (Web UI)
-  participant BFF as API/BFF
-  participant PR as Project Service
-  participant BL as Build Service + Metro
-  participant CDN as CDN
-  participant WSB as Live Reload WS
-  participant DV as Device (Expo/Host)
+  participant User
+  participant WebUI as Web UI (Editor)
+  participant API as API Gateway
+  participant Build as Build Service
+  participant WS as Live Reload Broker
+  participant Sandbox as Sandbox Executor
+  participant Device as Device (Web/Android/iOS)
 
-  U->>BFF: Save files
-  BFF->>PR: Update project version
-  BFF->>BL: Build request (content hash)
-  BL-->>BFF: Cache hit? (yes/no)
-  BL-->>CDN: Upload bundle/assets
-  U-->>WSB: Subscribe to project channel
-  U->>DV: Show QR code / deeplink
-  DV->>CDN: Fetch bundle
-  WSB-->>DV: Fast Refresh signals
-  U->>BFF: Manage deps (optional)
-  BFF->>BL: Rebuild and invalidate cache
+  User->>WebUI: Edit code
+  WebUI->>API: Save Project
+  API->>Build: Trigger build (Metro/Babel)
+  Build->>Sandbox: Bundle & execute RN code
+  Sandbox->>Device: Push app runtime
+  WebUI->>WS: Connect for live reload
+  User->>WebUI: Change code again
+  WS->>Device: Hot reload bundle
 ```
 
 ---
 
-## 3. Infra & Deployment View
+## 3. Components Breakdown
 
-```mermaid
-graph LR
-  U[User Browser] -->|HTTPS| BFF[API]
-  BFF --> PR[(Postgres)]
-  BFF --> ST[(Object Storage)]
-  BFF --> BL[Build Workers]
-  BL --> ME[Metro]
-  ME --> AR[(Artifacts)]
-  AR --> CDN[CDN/Edge]
-  U -->|WS| WSB[WS Broker]
-  DEV[Expo/Host App] -->|Fetch bundle| CDN
-  WSB --> DEV
-  BFF --> OBS[(Logs/Metrics/Tracing)]
+### **Frontend (Client Side)**
+
+* **Web Playground Editor**: Monaco/CodeMirror editor for JSX/JS.
+* **Preview Panel**: iFrame/web view or device emulator.
+* **Device Bridges**: iOS Simulator, Android Emulator, Web DOM.
+
+### **Backend Services**
+
+* **API Gateway**: Entry point for requests.
+* **Auth Service**: OAuth (GitHub/Google) or JWT.
+* **Project Service**: CRUD for code/projects.
+* **Storage**: S3, GCS, or blob storage.
+* **Build Service**: Runs Metro, Babel, TypeScript.
+* **Bundler**: Produces RN bytecode (Hermes).
+* **WS Broker**: Live reload / hot refresh.
+* **Sandbox Executor**: Runs code in secure containers.
+* **CDN**: Fast delivery of built bundles.
+* **Monitoring**: Logs & metrics.
+
+### **Integrations**
+
+* **VCS Import**: Import repos from GitHub/GitLab.
+* **Expo Services**: OTA updates.
+* **Feature Flags**: Rollouts, experiments.
+
+---
+
+## 4. Security Considerations
+
+* Sandbox execution with container isolation.
+* Rate limiting on API Gateway.
+* Authentication & RBAC.
+* Monitoring + alerting.
+
+---
+
+## 5. Scaling Concerns
+
+* CDN for bundles.
+* Horizontal scaling of Sandbox Executors.
+* Queue-based builds.
+* Autoscaling for peak traffic.
+
+---
+
+## 6. Example API Contract (Simplified)
+
+```http
+POST /projects
+{
+  "name": "My RN Project",
+  "files": { "App.js": "export default App;" }
+}
+
+GET /projects/{id}
+GET /projects/{id}/build
 ```
 
 ---
 
-## 4. Explanation of Components
+## 7. Non-Functional Requirements
 
-### Client Side
-
-* **Web UI / Editor** — Browser-based code editor (Monaco/VSCode engine).
-* **Preview Targets** —
-
-  * Web (via React DOM)
-  * iOS / Android emulators
-  * Real devices using Expo Go or a custom client.
-
-### Backend Services
-
-* **API Gateway (BFF)** — Orchestrates all client requests.
-* **Auth Service** — Handles login/session (JWT, OAuth).
-* **Project Service** — Stores user projects, metadata, dependencies.
-* **Storage** — Stores uploaded assets.
-* **Build Service** — Runs Metro/Babel for bundling.
-* **Bundler/Metro** — Produces JavaScript bundles and Hermes bytecode.
-* **Live Reload Broker** — Pushes updates via WebSockets.
-* **Sandbox Executor** — Runs isolated snippets (Docker, Firecracker, or VM).
-* **CDN** — Serves static bundles quickly worldwide.
-* **Logs & Metrics** — Observability stack.
-
-### Integrations
-
-* **VCS Import** — Pull projects from GitHub/GitLab.
-* **Expo Services** — OTA updates, device client support.
-* **Feature Flags** — Gradual rollouts.
+* Latency < 200ms for edits.
+* 99.9% uptime.
+* Device fidelity (emulator = real device).
 
 ---
 
-## 5. Example Developer Flow
+## 8. Risks & Mitigations
 
-1. Developer writes/edit code in browser.
-2. Code is synced to backend Project Service.
-3. Build Service compiles bundle via Metro.
-4. Bundle stored on CDN.
-5. Device fetches bundle.
-6. Live reload service updates preview instantly.
+* **Infinite loops in code** → Timeout in Sandbox.
+* **Abuse (crypto mining)** → Resource quotas.
+* **Slow builds** → Incremental caching.
 
 ---
 
-## 6. Benefits
+## 9. One-Liner for Stakeholders
 
-* **Zero-setup**: No local installs needed.
-* **Cross-platform**: Test on iOS, Android, Web.
-* **Fast feedback**: Live reload and hot updates.
-* **Collaboration**: Share links to playgrounds.
-* **Scalable**: Uses CDN and caching.
+> The React Native Playground provides an **instant coding sandbox** for RN apps with live preview on web and devices, powered by containerized builds, hot reload, and scalable cloud services.
 
 ---
-
-✅ This version is fully **GitHub-compatible** — all Mermaid code blocks are wrapped with \`\`\`mermaid fences, node IDs use underscores (no spaces), and edge labels follow the right syntax.
