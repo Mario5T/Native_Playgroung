@@ -7,37 +7,15 @@ This document explains the high-level architecture of a **React Native Playgroun
 ## 1. High-Level Architecture
 
 ```mermaid
-%%{init: {'theme': 'base'}}%%
-graph TD
-  subgraph Client_Side[Client Side]
-    A[Web UI (Playground Editor)]
-    B[Preview Targets]
-    B1[Web Preview (React DOM)]
-    B2[Android Device/Emulator]
-    B3[iOS Device/Simulator]
-  end
-  subgraph Backend_Services[Backend Services]
-    S1[API Gateway / BFF]
-    S2[Auth Service]
-    S3[Project Service - CRUD + Metadata]
-    S4[Storage (S3/GCS/Blob)]
-    S5[Build Service (Metro/Babel/tsc)]
-    S6[Bundler/Metro/Hermes bytecode]
-    S7[Live Reload / WS Broker]
-    S8[Sandbox Executor (containerized)]
-    S9[CDN / Edge Cache]
-    S10[Logs & Metrics (ELK/CloudWatch/Grafana)]
-  end
-  subgraph Integrations
-    I1[VCS Import (GitHub/GitLab)]
-    I2[Expo Services / OTA Updates]
-    I3[Feature Flags]
-  end
-  A --> S1
-  B --> S2
-  S1 --> S3
-  S3 --> S4
-  A --> I1
+flowchart LR
+  Dev[Developer Browser] --> Editor[Playground Editor]
+  Editor --> API[API / BFF]
+  API --> Build[Build (Metro)]
+  API --> Store[Object Storage]
+  Build --> CDN[CDN]
+  CDN --> Device[Expo/Host App]
+  Editor --> Live[Live Reload]
+  Live --> Device
 ```
 
 ---
@@ -45,7 +23,6 @@ graph TD
 ## 2. Flow – Editing & Running Code
 
 ```mermaid
-%%{init: {'theme': 'base'}}%%
 sequenceDiagram
   participant User
   participant WebUI as Web UI (Editor)
@@ -54,6 +31,7 @@ sequenceDiagram
   participant WS as Live Reload Broker
   participant Sandbox as Sandbox Executor
   participant Device as Device (Web/Android/iOS)
+
   User->>WebUI: Edit code
   WebUI->>API: Save Project
   API->>Build: Trigger build (Metro/Babel)
@@ -147,3 +125,5 @@ GET /projects/{id}/build
 ## 9. One-Liner for Stakeholders
 
 > The React Native Playground provides an **instant coding sandbox** for RN apps with live preview on web and devices, powered by containerized builds, hot reload, and scalable cloud services.
+
+---
