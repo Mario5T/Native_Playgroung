@@ -8,14 +8,14 @@ This document explains the high-level architecture of a **React Native Playgroun
 
 ```mermaid
 flowchart LR
-  Dev[Developer Browser] --> Editor[Playground Editor]
-  Editor --> API[API / BFF]
-  API --> Build[Build (Metro)]
-  API --> Store[Object Storage]
-  Build --> CDN[CDN]
-  CDN --> Device[Expo/Host App]
-  Editor --> Live[Live Reload]
-  Live --> Device
+    Dev[Developer Browser] --> Editor[Playground Editor]
+    Editor --> API[API / BFF]
+    API --> Build["Build (Metro)"]
+    API --> Store[Object Storage]
+    Build --> CDN[CDN]
+    CDN --> Device[Expo/Host App]
+    Editor --> Live[Live Reload]
+    Live --> Device
 ```
 
 ---
